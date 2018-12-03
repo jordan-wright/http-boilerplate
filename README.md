@@ -16,7 +16,7 @@ This application largely uses the standard library. Routing is provided by the `
 
 ## More Information
 
-For more information on the design behind this boilerplate, please refer to [the blog post]().
+For more information on the design behind this boilerplate, please refer to [the blog post](https://getgophish.com/blog/post/2018-12-02-building-web-servers-in-go/).
 
 ## Usage
 
