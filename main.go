@@ -50,9 +50,9 @@ func readAll(w http.ResponseWriter, r *http.Request) {
 	var players = make(map[string]*Player)
 
 	for _, file := range files {
-		dat, err := os.Open(file)
+		byteValue, err := ioutil.ReadFile(file)
 		check(err)
-		byteValue, _ := ioutil.ReadAll(dat)
+
 		var match Match
 		json.Unmarshal(byteValue, &match)
 
