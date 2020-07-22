@@ -22,13 +22,15 @@ var startingRating float32 = 1000.0
 
 // Player - person who plays
 type Player struct {
-	ID      int
-	Name    string
-	Wins    int
-	Losses  int
-	Ratio   float32
-	Rating  float32
-	Matches []RawMatch
+	ID          int
+	Name        string
+	Wins        int
+	Losses      int
+	GoalsScored int
+	GoalsLost   int
+	WinRate     float32
+	Rating      float32
+	Matches     []RawMatch
 }
 
 var playersDB map[string]*Player
@@ -76,7 +78,9 @@ func processPlayersFromTeam(players []string) ([]Player, float32) {
 			newPlayer.Name = rawPlayerName
 			newPlayer.Wins = 0
 			newPlayer.Losses = 0
-			newPlayer.Ratio = 0
+			newPlayer.GoalsScored = 0
+			newPlayer.GoalsLost = 0
+			newPlayer.WinRate = 0
 			newPlayer.Rating = 1000
 			playersDB[rawPlayerName] = &newPlayer
 		}
@@ -115,27 +119,34 @@ func updatePlayers(calculatedMatch CalculatedMatch, rawMatch RawMatch) {
 	for _, player := range calculatedMatch.Teams.Red.Players {
 		playersDB[player.Name].Rating += calculatedMatch.Teams.Red.RatingChange
 		playersDB[player.Name].Matches = append(playersDB[player.Name].Matches, rawMatch)
+		playersDB[player.Name].GoalsScored += calculatedMatch.Teams.Red.Score
+		playersDB[player.Name].GoalsLost += calculatedMatch.Teams.Blue.Score
+
 		if calculatedMatch.Teams.Red.Score > calculatedMatch.Teams.Blue.Score {
 			playersDB[player.Name].Wins++
 		} else {
 			playersDB[player.Name].Losses++
 		}
-		if playersDB[player.Name].Losses > 0 {
-			playersDB[player.Name].Ratio = float32(playersDB[player.Name].Wins) / float32(playersDB[player.Name].Losses)
-		}
+
+		playersDB[player.Name].WinRate = float32(playersDB[player.Name].Wins) / (float32(playersDB[player.Name].Wins) + float32(playersDB[player.Name].Losses))
+
 	}
 
 	for _, player := range calculatedMatch.Teams.Blue.Players {
 		playersDB[player.Name].Rating += calculatedMatch.Teams.Blue.RatingChange
 		playersDB[player.Name].Matches = append(playersDB[player.Name].Matches, rawMatch)
+
+		playersDB[player.Name].GoalsScored += calculatedMatch.Teams.Blue.Score
+		playersDB[player.Name].GoalsLost += calculatedMatch.Teams.Red.Score
+
 		if calculatedMatch.Teams.Blue.Score > calculatedMatch.Teams.Red.Score {
 			playersDB[player.Name].Wins++
 		} else {
 			playersDB[player.Name].Losses++
 		}
-		if playersDB[player.Name].Losses > 0 {
-			playersDB[player.Name].Ratio = float32(playersDB[player.Name].Wins) / float32(playersDB[player.Name].Losses)
-		}
+
+		playersDB[player.Name].WinRate = float32(playersDB[player.Name].Wins) / (float32(playersDB[player.Name].Wins) + float32(playersDB[player.Name].Losses))
+
 	}
 }
 
@@ -162,9 +173,16 @@ func calculateMatch(rawMatch RawMatch) {
 }
 
 func generateHTMLTable() string {
-	returnValue := "<table><tr><th>Name</th><th>Wins</th><th>Losses</th><th>Ratio</th><th>Rating</th></tr>"
+	returnValue := "<table><tr><th>Name</th><th>Wins</th><th>Losses</th><th>Winrate</th><th>GScored</th><th>GLost</th><th>Rating</th></tr>"
 	for _, player := range playersDB {
-		returnValue += "<tr><td>" + player.Name + "</td><td>" + strconv.Itoa(player.Wins) + "</td><td>" + strconv.Itoa(player.Losses) + "</td><td>" + fmt.Sprintf("%.2f", player.Ratio) + "</td><td>" + fmt.Sprintf("%.2f", player.Rating) + "</td></tr>"
+		returnValue += "<tr><td>" +
+			player.Name + "</td><td>" +
+			strconv.Itoa(player.Wins) + "</td><td>" +
+			strconv.Itoa(player.Losses) + "</td><td>" +
+			fmt.Sprintf("%.2f", (player.WinRate*100)) + "%%</td><td>" +
+			strconv.Itoa(player.GoalsScored) + "</td><td>" +
+			strconv.Itoa(player.GoalsLost) + "</td><td>" +
+			fmt.Sprintf("%.2f", player.Rating) + "</td></tr>"
 	}
 	returnValue += "</table>"
 	return returnValue
