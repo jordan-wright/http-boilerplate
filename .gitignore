@@ -12,3 +12,4 @@
 *.out
 
 cmd/boilerplate/boilerplate
+__debug_bin
