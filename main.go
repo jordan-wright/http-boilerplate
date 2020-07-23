@@ -3,17 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
 func check(e error) {
 	if e != nil {
+		// log.Println("Fatal: ")
+		// log.Println(e)
 		panic(e)
 	}
 }
@@ -33,7 +39,8 @@ type Player struct {
 	Matches     []RawMatch
 }
 
-var playersDB map[string]*Player
+// var playersDB map[string]*Player
+var playersDB = make(map[string]*Player)
 var matchesDB []CalculatedMatch
 
 // RawMatch - data parsed from replay
@@ -82,6 +89,7 @@ func processPlayersFromTeam(players []string) ([]Player, float32) {
 			newPlayer.GoalsLost = 0
 			newPlayer.WinRate = 0
 			newPlayer.Rating = 1000
+			newPlayer.Matches = []RawMatch{}
 			playersDB[rawPlayerName] = &newPlayer
 		}
 		parsedPlayers = append(parsedPlayers, *playersDB[rawPlayerName])
@@ -194,7 +202,7 @@ func readAll(w http.ResponseWriter, r *http.Request) {
 
 	var files []string
 
-	root := "replayData/"
+	root := "files/replayData/"
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			files = append(files, path)
@@ -220,9 +228,71 @@ func readAll(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, generateHTMLTable())
 }
 
+func parseReplay(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["url"]
+
+	if !ok || len(keys[0]) < 1 {
+		log.Println("Url Param 'url' is missing")
+		return
+	}
+
+	resp, err := http.Get(keys[0])
+	check(err)
+	defer resp.Body.Close()
+	contentDispositionHeaderSplitted := strings.Split(resp.Header["Content-Disposition"][0], "=")
+	replayName := contentDispositionHeaderSplitted[len(contentDispositionHeaderSplitted)-1]
+	matchExists := true
+
+	if _, err := os.Stat("files/replayData/" + replayName + ".bin.json"); os.IsNotExist(err) {
+		matchExists = false
+		log.Println(replayName + " doesn't exist, processing")
+
+		// out, err := os.Create("files/unparsedReplays/" + replayName)
+		out, err := os.Create("haxball-parser/replays/" + replayName)
+		defer out.Close()
+
+		n, err := io.Copy(out, resp.Body)
+		check(err)
+		log.Println("Saved " + strconv.Itoa(int(n)) + " bytes")
+
+		cmd := exec.Command("python3", "run_converter.py")
+		cmd.Dir = "haxball-parser"
+
+		_, err = cmd.Output()
+		check(err)
+
+		cmd = exec.Command("python3", "test.py")
+		cmd.Dir = "haxball-parser"
+
+		_, err = cmd.Output()
+		check(err)
+	}
+	byteValue, err := ioutil.ReadFile("files/replayData/" + replayName + ".bin.json")
+	check(err)
+	var match RawMatch
+	json.Unmarshal(byteValue, &match)
+
+	outputMeta := "\n>>>Red<<<\n"
+	for _, player := range match.Teams.Red {
+		outputMeta += player + "\n"
+	}
+	outputMeta += ">>>Blue<<<" + "\n"
+	for _, player := range match.Teams.Blue {
+		outputMeta += player + "\n"
+	}
+	outputMeta += "---Score---" + "\n"
+	outputMeta += "Red " + strconv.Itoa(match.Score.Red) + ":" + strconv.Itoa(match.Score.Blue) + " Blue"
+	outputMessage := "<html><head><meta name=\"description\" content=\"" + outputMeta + "\"></head><body></body></html>"
+	fmt.Fprintf(w, outputMessage)
+	if !matchExists {
+		calculateMatch(match)
+	}
+}
+
 func main() {
 	http.HandleFunc("/", HelloServer)
 	http.HandleFunc("/readAll", readAll)
+	http.HandleFunc("/parseReplay", parseReplay)
 	http.ListenAndServe(":7777", nil)
 }
 
@@ -230,5 +300,7 @@ func main() {
 func HelloServer(w http.ResponseWriter, r *http.Request) {
 	var a = 1
 	a = a + a
-	fmt.Fprintf(w, "Hello, %s!"+strconv.Itoa(a), r.URL.Path[1:])
+	outputMessage := "<html><head><meta name=\"description\" content=\"" + "123456" + "\"></head><body>" + "456789" + "</body></html>"
+
+	fmt.Fprintf(w, outputMessage)
 }
