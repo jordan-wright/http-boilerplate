@@ -1,23 +1,22 @@
 package controllers
 
 import (
-	"log"
-
+	//mysql
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/rushteam/gosql"
 
 	"../models"
-	"../tools"
-	"github.com/go-xorm/xorm"
 )
 
 //InitializeDB initializes DB if not already existing
-func InitializeDB() {
+func InitializeDB() *gosql.PoolCluster {
+	db := gosql.NewCluster(
+		gosql.AddDb("mysql", "root:root@tcp(127.0.0.1:3306)/referee?parseTime=true&readTimeout=3s&writeTimeout=3s&timeout=3s"),
+	)
 
-	engine, err := xorm.NewEngine("mysql", "root:root@tcp(localhost:3306)/referee")
-	// DBEngine = engine
-	results, err := engine.Query("select * from players")
+	return db
+}
 
-	err = engine.Sync2(new(models.TestStruct))
-	tools.Check(err)
-	log.Println(results)
+func insertPlayer(DBEngine *gosql.PoolCluster, player models.Player) {
+	DBEngine.Insert(player)
 }
