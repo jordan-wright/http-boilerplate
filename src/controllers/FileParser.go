@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os/exec"
 
 	"../models"
@@ -30,16 +31,13 @@ func ParseReplay(replayName string) {
 	cmd.Dir = "hb-parser"
 	_, err = cmd.Output()
 	tools.Check(err)
-
+	log.Println(replayName + " parsed")
 }
 
 // ReadMatchFromFile takes converted file and creates RawMatch object from it
-func ReadMatchFromFile(replayName string, fromName bool) models.RawMatch {
+func ReadMatchFromFile(replayName string) models.RawMatch {
 	suffix := ".bin.json"
 	filepath := ParsedReplayFolder + replayName + suffix
-	if fromName == false {
-		filepath = replayName
-	}
 	byteValue, err := ioutil.ReadFile(filepath)
 	tools.Check(err)
 

@@ -1,8 +1,8 @@
 package repositories
 
 type SQLPlayerMatch struct {
-	PlayerID int `db:"player_id"`
-	MatchID  int `db:"match_id"`
+	PlayerID int64 `db:"player_id"`
+	MatchID  int64 `db:"match_id"`
 }
 
 func (u *SQLPlayerMatch) TableName() string {

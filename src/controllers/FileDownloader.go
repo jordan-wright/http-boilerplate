@@ -17,10 +17,11 @@ func DownloadReplay(path string) string {
 	tools.Check(err)
 	defer resp.Body.Close()
 	contentDispositionHeaderSplitted := strings.Split(resp.Header["Content-Disposition"][0], "=")
-	// timestamp := strconv.Itoa(int(time.Now().Unix()))
+
 	replayName := contentDispositionHeaderSplitted[len(contentDispositionHeaderSplitted)-1]
-	// replayName = strings.TrimLeft((strings.Split(replayName, ".")[0] + "-" + timestamp + "." + strings.Split(replayName, ".")[1]), "HBReplay-")
+
 	filepath := UnparsedReplayFolder + replayName
+
 	out2, err := os.Create(filepath)
 	defer out2.Close()
 
@@ -28,6 +29,8 @@ func DownloadReplay(path string) string {
 	tools.Check(err)
 
 	log.Println("Saved " + strconv.Itoa(int(n)) + " bytes")
+
+	ParseReplay(replayName)
 
 	return replayName
 }

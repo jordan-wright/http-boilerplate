@@ -7,21 +7,21 @@ import (
 )
 
 // ExportHTML creates html code for unfurling and basic shows. Will be redirecting to React app in future
-func ExportHTML(rawMatch models.RawMatch) string {
+func ExportHTML(cm models.CalculatedMatch) string {
 	outputMeta := "\n>>>Red<<<"
-	for _, player := range rawMatch.Teams.Red {
-		outputMeta += " - " + player
+	for _, player := range cm.RedTeam.Players {
+		outputMeta += " - " + player.PlayerName
 	}
 	outputMeta += "\n>>>Blue<<<"
-	for _, player := range rawMatch.Teams.Blue {
-		outputMeta += " - " + player
+	for _, player := range cm.BlueTeam.Players {
+		outputMeta += " - " + player.PlayerName
 	}
-	if rawMatch.Score.Red > rawMatch.Score.Blue {
+	if cm.RedTeam.Score > cm.BlueTeam.Score {
 		outputMeta += "\nRed"
 	} else {
 		outputMeta += "\nBlue"
 	}
-	outputMeta += " has won! (" + strconv.Itoa(rawMatch.Score.Red) + ":" + strconv.Itoa(rawMatch.Score.Blue) + ")"
+	outputMeta += " has won! (" + strconv.Itoa(int(cm.RedTeam.Score)) + ":" + strconv.Itoa(int(cm.BlueTeam.Score)) + ")"
 	metaTag := "<meta name=\"description\" content=\"" + outputMeta + "\">"
 	metaOgDescription := "<meta property=\"og:description\" content=\"" + outputMeta + "\">"
 	metaOgTitle := "<meta property=\"og:title\" content=\"Match results!\">"
