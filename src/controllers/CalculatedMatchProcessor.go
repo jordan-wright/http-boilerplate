@@ -78,7 +78,13 @@ func updatePlayers(cm models.CalculatedMatch) {
 }
 
 func calculateMatch(rawMatch models.RawMatch) models.CalculatedMatch {
+	duplicateID := models.CheckForDuplicatePositions(rawMatch.RawPositionsAtEnd)
+	if duplicateID != 0 {
+		return *models.GetMatchByID(duplicateID)
+	}
+
 	var processedMatch models.CalculatedMatch
+	processedMatch.RawPositions = rawMatch.RawPositionsAtEnd
 
 	processedMatch.RedTeam.Players, processedMatch.RedTeam.AvgTeamRating = processPlayersFromTeam(rawMatch.Teams.Red, true)
 	processedMatch.BlueTeam.Players, processedMatch.BlueTeam.AvgTeamRating = processPlayersFromTeam(rawMatch.Teams.Blue, false)

@@ -8,6 +8,7 @@ type SQLCalculatedMatch struct {
 	RedAvg       float32 `db:"red_avg"`
 	BlueAvg      float32 `db:"blue_avg"`
 	RatingChange float32 `db:"rating_change"`
+	RawPositions string  `db:"raw_positions"`
 }
 
 func (u *SQLCalculatedMatch) TableName() string {

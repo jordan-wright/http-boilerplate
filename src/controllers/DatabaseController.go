@@ -2,11 +2,10 @@ package controllers
 
 import (
 	//mysql
-
+	"../models"
+	"../repositories"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rushteam/gosql"
-
-	"../models"
 )
 
 //InitializeDB initializes DB if not already existing
@@ -16,6 +15,14 @@ func InitializeDB() *gosql.PoolCluster {
 	)
 	gosql.Debug = true
 	return db
+}
+
+func TruncateAll() {
+	repositories.DBEngine.Query("truncate table downloaded_url;" +
+		"truncate table match_calculated;" +
+		"truncate table player;" +
+		"truncate table player_snapshot;" +
+		"truncate table raw_match;")
 }
 
 func insertPlayer(DBEngine *gosql.PoolCluster, player models.Player) {

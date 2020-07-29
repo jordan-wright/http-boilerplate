@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,19 +21,34 @@ var startingRating float32 = 1000.0
 var DBEngine *gosql.PoolCluster = controllers.InitializeDB()
 
 func regenerateData(w http.ResponseWriter, r *http.Request) {
+	// controllers.TruncateAll()
 	filepath.Walk(controllers.ParsedReplayFolder, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 		if filepath.Ext(path) == ".json" {
-			repositories.DBEngine = controllers.InitializeDB()
+			// repositories.DBEngine = controllers.InitializeDB()
 			controllers.ProcessReplayFromFile(strings.Trim(info.Name(), ".bin.json"))
+			log.Println(strings.Trim(info.Name(), ".bin.json"))
 			// repositories.DBEngine.Close()
-			time.Sleep(100 * time.Millisecond)
+			// time.Sleep(2 * time.Second)
 		}
 		return nil
 	})
 	// TODO: calculate everything from unparsed replays
+
+}
+
+func regenerateParsedReplays(w http.ResponseWriter, r *http.Request) {
+	filepath.Walk(controllers.UnparsedReplayFolder, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) == ".hbr2" {
+			controllers.ParseReplay(info.Name())
+		}
+		return nil
+	})
 
 }
 

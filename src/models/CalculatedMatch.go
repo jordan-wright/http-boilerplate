@@ -15,10 +15,11 @@ type Team struct {
 
 //CalculatedMatch - match filled with full match and player data
 type CalculatedMatch struct {
-	ID       int64
-	Time     string
-	RedTeam  Team
-	BlueTeam Team
+	ID           int64
+	Time         string
+	RedTeam      Team
+	BlueTeam     Team
+	RawPositions string
 }
 
 func (cm *CalculatedMatch) InsertToDB() int64 {
@@ -29,6 +30,7 @@ func (cm *CalculatedMatch) InsertToDB() int64 {
 		RedAvg:       cm.RedTeam.AvgTeamRating,
 		BlueAvg:      cm.BlueTeam.AvgTeamRating,
 		RatingChange: cm.RedTeam.RatingChange,
+		RawPositions: cm.RawPositions,
 	}
 
 	res, err := repositories.DBEngine.Insert(match)
@@ -83,6 +85,17 @@ func GetMatchByID(id int64) *CalculatedMatch {
 	tools.Check(err)
 
 	return resultObject
+}
+
+func CheckForDuplicatePositions(positions string) int64 {
+	SQLObject := &repositories.SQLCalculatedMatch{}
+	err := repositories.DBEngine.Fetch(SQLObject,
+		gosql.Where("raw_positions", positions))
+
+	if err != nil && err.Error() == "sql: no rows in result set" {
+		return 0
+	}
+	return SQLObject.ID
 }
 
 /*
