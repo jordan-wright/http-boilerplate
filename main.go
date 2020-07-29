@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"./src/controllers"
@@ -24,8 +25,10 @@ func regenerateData(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 		if filepath.Ext(path) == ".json" {
-			match := controllers.ReadMatchFromFile(path)
-			match.InsertIntoDB(DBEngine)
+			repositories.DBEngine = controllers.InitializeDB()
+			controllers.ProcessReplayFromFile(strings.Trim(info.Name(), ".bin.json"))
+			// repositories.DBEngine.Close()
+			time.Sleep(100 * time.Millisecond)
 		}
 		return nil
 	})

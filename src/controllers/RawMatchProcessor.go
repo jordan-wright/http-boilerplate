@@ -15,7 +15,7 @@ func ProcessReplay(request *http.Request) int64 {
 		return id
 	}
 	replayName := DownloadReplay(downloadPath)
-	id = processReplayFromFile(replayName)
+	id = ProcessReplayFromFile(replayName)
 
 	urlToCheck.MatchID = id
 	urlToCheck.InsertIntoDB()
@@ -24,7 +24,7 @@ func ProcessReplay(request *http.Request) int64 {
 
 }
 
-func processReplayFromFile(replayName string) int64 {
+func ProcessReplayFromFile(replayName string) int64 {
 
 	rawMatch := ReadMatchFromFile(replayName)
 
