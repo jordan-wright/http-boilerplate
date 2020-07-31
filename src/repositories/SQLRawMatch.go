@@ -7,6 +7,7 @@ import (
 	"github.com/rushteam/gosql"
 )
 
+// SQLRawMatch .
 type SQLRawMatch struct {
 	ID                int64  `db:"id"`
 	Time              string `db:"time"`
@@ -17,10 +18,12 @@ type SQLRawMatch struct {
 	BluePlayers       string `db:"blue_players"`
 }
 
+// TableName .
 func (u *SQLRawMatch) TableName() string {
 	return "raw_match"
 }
 
+// Insert .
 func (u *SQLRawMatch) Insert(DBEngine *gosql.PoolCluster) int64 {
 	res, err := DBEngine.Insert(&u)
 	insertID, _ := res.LastInsertId()

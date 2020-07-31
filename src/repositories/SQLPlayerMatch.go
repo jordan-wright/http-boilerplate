@@ -1,10 +1,12 @@
 package repositories
 
+// SQLPlayerMatch ..
 type SQLPlayerMatch struct {
 	PlayerID int64 `db:"player_id"`
 	MatchID  int64 `db:"match_id"`
 }
 
+// TableName .
 func (u *SQLPlayerMatch) TableName() string {
 	return "player_match"
 }

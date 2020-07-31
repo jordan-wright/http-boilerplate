@@ -3,7 +3,7 @@ package models
 import (
 	"../repositories"
 	"../tools"
-	"github.com/rushteam/gosql"
+	"github.com/jinzhu/gorm"
 )
 
 // Player - person who plays
@@ -19,26 +19,34 @@ type Player struct {
 	Matches     []*CalculatedMatch
 }
 
+// GetPlayerByName .
 func GetPlayerByName(name string) *Player {
 	SQLPlayer := &repositories.SQLPlayer{}
-	err := repositories.DBEngine.Fetch(SQLPlayer,
-		gosql.Where("name", name),
-	)
-
-	if err != nil && err.Error() == "sql: no rows in result set" {
+	err := repositories.DBEngine.First(SQLPlayer, "name = ?", name)
+	if gorm.IsRecordNotFoundError(err.Error) {
 		return nil
 	}
-	tools.Check(err)
+	tools.Check(err.Error)
+
+	return getPlayerFromSQLPlayer(*SQLPlayer)
+}
+
+// GetPlayerByID .
+func GetPlayerByID(id int) *Player {
+	SQLPlayer := &repositories.SQLPlayer{}
+	err := repositories.DBEngine.First(SQLPlayer, "id = ?", id)
+	if gorm.IsRecordNotFoundError(err.Error) {
+		return nil
+	}
+	tools.Check(err.Error)
 
 	return getPlayerFromSQLPlayer(*SQLPlayer)
 }
 
 func getPlayerFromSQLPlayer(SQLPlayer repositories.SQLPlayer) *Player {
 	var playerSnapshots []PlayerSnapshot
-	err := repositories.DBEngine.FetchAll(&playerSnapshots,
-		gosql.Where("player_id", SQLPlayer.ID),
-	)
-	tools.Check(err)
+	err := repositories.DBEngine.Find(&playerSnapshots, "player_id = ?", SQLPlayer.ID)
+	tools.Check(err.Error)
 
 	var matches []*CalculatedMatch
 	for _, playerMatch := range playerSnapshots {
@@ -61,6 +69,7 @@ func getPlayerFromSQLPlayer(SQLPlayer repositories.SQLPlayer) *Player {
 	return &returnObject
 }
 
+// InsertIntoDB .
 func (p *Player) InsertIntoDB() int64 {
 	SQLObject := &repositories.SQLPlayer{
 		Name:        p.Name,
@@ -71,13 +80,13 @@ func (p *Player) InsertIntoDB() int64 {
 		WinRate:     p.WinRate,
 		Rating:      p.Rating,
 	}
-	res, err := repositories.DBEngine.Insert(SQLObject)
-	tools.Check(err)
-	insertID, _ := res.LastInsertId()
+	err := repositories.DBEngine.Save(SQLObject)
+	tools.Check(err.Error)
 
-	return insertID
+	return SQLObject.ID
 }
 
+// CreateSnapshot .
 func (p *Player) CreateSnapshot(isRed bool) *PlayerSnapshot {
 	snapshot := &PlayerSnapshot{
 		PlayerID:   p.ID,
@@ -85,29 +94,27 @@ func (p *Player) CreateSnapshot(isRed bool) *PlayerSnapshot {
 		Rating:     p.Rating,
 		IsRed:      isRed,
 	}
-	res, err := repositories.DBEngine.Insert(snapshot)
-	tools.Check(err)
-	insertID, _ := res.LastInsertId()
-	snapshot.ID = insertID
-
+	err := repositories.DBEngine.Save(snapshot)
+	tools.Check(err.Error)
 	return snapshot
 }
 
+// UpdatePlayer .
 func UpdatePlayer(PlayerID int64, win bool, goalsScored int64, goalsLost int64, ratingChange float32) {
 	player := &repositories.SQLPlayer{}
-	err := repositories.DBEngine.Fetch(player,
-		gosql.Where("id", PlayerID))
-	tools.Check(err)
+	err := repositories.DBEngine.First(player, "id = ?", PlayerID)
+	tools.Check(err.Error)
 	if win {
 		player.Wins = player.Wins + 1
 	} else {
 		player.Losses = player.Losses + 1
 	}
+	player.WinRate = float32(float32(player.Wins) / float32(player.Wins+player.Losses))
 	player.GoalsScored += goalsScored
 	player.GoalsLost += goalsLost
 	player.Rating += ratingChange
 
-	_, err = repositories.DBEngine.Update(player, gosql.Where("id", PlayerID))
-	tools.Check(err)
+	err = repositories.DBEngine.Save(player)
+	tools.Check(err.Error)
 
 }

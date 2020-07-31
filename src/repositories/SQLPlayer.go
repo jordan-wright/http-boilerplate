@@ -1,5 +1,6 @@
 package repositories
 
+// SQLPlayer .
 type SQLPlayer struct {
 	ID          int64   `db:"id"`
 	Name        string  `db:"name"`
@@ -11,6 +12,7 @@ type SQLPlayer struct {
 	Rating      float32 `db:"current_rating"`
 }
 
+// TableName .
 func (u *SQLPlayer) TableName() string {
 	return "player"
 }

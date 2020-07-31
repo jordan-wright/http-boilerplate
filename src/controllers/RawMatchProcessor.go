@@ -6,10 +6,11 @@ import (
 	"../repositories"
 )
 
+// ProcessReplay .
 func ProcessReplay(request *http.Request) int64 {
 	downloadPath := ExtractURL(request)
 
-	urlToCheck := repositories.SQLDownloadedUrl{URL: downloadPath}
+	urlToCheck := repositories.SQLDownloadedURL{URL: downloadPath}
 	id := urlToCheck.DoesExistsInDB()
 	if id != 0 {
 		return id
@@ -24,6 +25,7 @@ func ProcessReplay(request *http.Request) int64 {
 
 }
 
+// ProcessReplayFromFile .
 func ProcessReplayFromFile(replayName string) int64 {
 
 	rawMatch := ReadMatchFromFile(replayName)

@@ -1,33 +1,33 @@
 package repositories
 
-import (
-	"../tools"
-	"github.com/rushteam/gosql"
-)
+import "github.com/jinzhu/gorm"
 
-type SQLDownloadedUrl struct {
+// SQLDownloadedURL .
+type SQLDownloadedURL struct {
 	URL     string `db:"url"`
 	MatchID int64  `db:"match_id"`
 }
 
-func (u *SQLDownloadedUrl) TableName() string {
+// TableName .
+func (u *SQLDownloadedURL) TableName() string {
 	return "downloaded_url"
 }
 
-func (u *SQLDownloadedUrl) DoesExistsInDB() int64 {
-	url := &SQLDownloadedUrl{}
-	err := DBEngine.Fetch(url,
-		gosql.Where("url", u.URL))
-	if err != nil && err.Error() == "sql: no rows in result set" {
+// DoesExistsInDB .
+func (u *SQLDownloadedURL) DoesExistsInDB() int64 {
+	url := &SQLDownloadedURL{}
+	err := DBEngine.First(url, "url = ?", u.URL)
+
+	if gorm.IsRecordNotFoundError(err.Error) {
 		return 0
 	}
-	tools.Check(err)
+
 	return url.MatchID
 }
 
-func (u *SQLDownloadedUrl) InsertIntoDB() {
-	_, err := DBEngine.Insert(u)
-	tools.Check(err)
+// InsertIntoDB .
+func (u *SQLDownloadedURL) InsertIntoDB() {
+	DBEngine.Save(u)
 }
 
 /*

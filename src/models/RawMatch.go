@@ -23,6 +23,7 @@ type RawMatch struct {
 	}
 }
 
+// InsertIntoDB .
 func (rm RawMatch) InsertIntoDB(DBEngine *gosql.PoolCluster) int64 {
 	result, err := DBEngine.Insert(&rm)
 	tools.Check(err)
@@ -30,6 +31,7 @@ func (rm RawMatch) InsertIntoDB(DBEngine *gosql.PoolCluster) int64 {
 	return insertID
 }
 
+// CreateSQLEntity .
 func (rm RawMatch) CreateSQLEntity() repositories.SQLRawMatch {
 	SQLRawMatch := &repositories.SQLRawMatch{}
 	SQLRawMatch.Time = rm.Time

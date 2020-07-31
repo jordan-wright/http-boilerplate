@@ -1,5 +1,6 @@
 package repositories
 
-import "github.com/rushteam/gosql"
+import "github.com/jinzhu/gorm"
 
-var DBEngine *gosql.PoolCluster
+// DBEngine .
+var DBEngine *gorm.DB

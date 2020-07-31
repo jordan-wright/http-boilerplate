@@ -3,10 +3,9 @@ package models
 import (
 	"../repositories"
 	"../tools"
-	"github.com/rushteam/gosql"
 )
 
-// Player - person who plays
+// PlayerSnapshot - snapshot of player in history
 type PlayerSnapshot struct {
 	ID         int64   `db:"id"`
 	PlayerID   int64   `db:"player_id"`
@@ -16,17 +15,18 @@ type PlayerSnapshot struct {
 	IsRed      bool    `db:"is_red"`
 }
 
+// TableName .
 func (u *PlayerSnapshot) TableName() string {
 	return "player_snapshot"
 }
 
+// UpdateMatchID .
 func (u *PlayerSnapshot) UpdateMatchID(matchID int64) {
 	snap := &PlayerSnapshot{}
-	err := repositories.DBEngine.Fetch(snap,
-		gosql.Where("id", u.ID))
-	tools.Check(err)
+	err := repositories.DBEngine.First(snap, "id = ?", u.ID)
+	tools.Check(err.Error)
 	snap.MatchID = matchID
 
-	_, err = repositories.DBEngine.Update(snap, gosql.Where("id", snap.ID))
-	tools.Check(err)
+	err = repositories.DBEngine.Save(snap)
+	tools.Check(err.Error)
 }

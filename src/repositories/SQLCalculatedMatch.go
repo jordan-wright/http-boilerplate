@@ -1,5 +1,6 @@
 package repositories
 
+// SQLCalculatedMatch .
 type SQLCalculatedMatch struct {
 	ID           int64   `db:"id"`
 	Time         string  `db:"timestamp"`
@@ -11,6 +12,7 @@ type SQLCalculatedMatch struct {
 	RawPositions string  `db:"raw_positions"`
 }
 
+// TableName .
 func (u *SQLCalculatedMatch) TableName() string {
 	return "match_calculated"
 }

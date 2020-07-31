@@ -42,14 +42,16 @@ func processTime(timeString string) int64 {
 }
 
 func calculateRatingChange(calculatedMatch models.CalculatedMatch) float32 {
-	kCoefficient := float32(50)
+	kCoefficient := float32(250)
 
 	ratingDifference := calculatedMatch.BlueTeam.AvgTeamRating - calculatedMatch.RedTeam.AvgTeamRating
 	powerPiece := math.Pow(10, float64(ratingDifference/400))
 	winChance := float32(1 / (1 + powerPiece))
 	scorePerformance := float32(0.5)
 	if !(calculatedMatch.RedTeam.Score+calculatedMatch.BlueTeam.Score == 0) {
-		scorePerformance = float32(calculatedMatch.RedTeam.Score) / float32(calculatedMatch.BlueTeam.Score+calculatedMatch.RedTeam.Score)
+		// scorePerformance = float32(calculatedMatch.RedTeam.Score) / float32(calculatedMatch.BlueTeam.Score+calculatedMatch.RedTeam.Score)
+		scoreDifference := calculatedMatch.RedTeam.Score - calculatedMatch.BlueTeam.Score
+		scorePerformance = float32(scoreDifference+10) / 20
 	}
 	ratingChange := (scorePerformance - winChance) * kCoefficient
 	ratingChangePerPlayer := ratingChange / float32(len(calculatedMatch.RedTeam.Players))
