@@ -127,6 +127,8 @@ func main() {
 	repositories.DBEngine = controllers.InitializeDB()
 	http.HandleFunc("/", HelloServer)
 	http.HandleFunc("/regenerate", regenerateData)
+	http.HandleFunc("/getLastMatches", controllers.GetLastMatches)
+	http.HandleFunc("/getPlayersTable", controllers.GetPlayersTable)
 	http.HandleFunc("/p", parseReplay)
 	http.HandleFunc("/findTeams", findTeams)
 	http.ListenAndServe(":7777", nil)

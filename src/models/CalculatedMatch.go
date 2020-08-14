@@ -37,17 +37,10 @@ func (cm *CalculatedMatch) InsertToDB() int64 {
 	return match.ID
 }
 
-// GetMatchByID .
-func GetMatchByID(id int64) *CalculatedMatch {
-	SQLObject := &repositories.SQLCalculatedMatch{}
-	err := repositories.DBEngine.First(SQLObject, "id = ?", id)
-
-	if err.Error != nil {
-		return nil
-	}
-
+// HydrateMatch ..
+func HydrateMatch(SQLObject repositories.SQLCalculatedMatch) CalculatedMatch {
 	var playersSnaps []PlayerSnapshot
-	repositories.DBEngine.Find(&playersSnaps, "match_id = ?", id)
+	repositories.DBEngine.Find(&playersSnaps, "match_id = ?", SQLObject.ID)
 	var redPlayers []PlayerSnapshot
 	var bluePlayers []PlayerSnapshot
 	for _, playerSnap := range playersSnaps {
@@ -59,7 +52,7 @@ func GetMatchByID(id int64) *CalculatedMatch {
 	}
 
 	resultObject := &CalculatedMatch{
-		ID:   id,
+		ID:   SQLObject.ID,
 		Time: SQLObject.Time,
 		RedTeam: Team{
 			Players:       redPlayers,
@@ -76,7 +69,19 @@ func GetMatchByID(id int64) *CalculatedMatch {
 		RawPositions: SQLObject.RawPositions,
 	}
 
-	return resultObject
+	return *resultObject
+}
+
+// GetMatchByID .
+func GetMatchByID(id int64) *CalculatedMatch {
+	SQLObject := &repositories.SQLCalculatedMatch{}
+	err := repositories.DBEngine.First(SQLObject, "id = ?", id)
+
+	if err.Error != nil {
+		return nil
+	}
+	resultData := HydrateMatch(*SQLObject)
+	return &resultData
 }
 
 // CheckForDuplicatePositions .
@@ -88,6 +93,24 @@ func CheckForDuplicatePositions(positions string) int64 {
 		return 0
 	}
 	return SQLObject.ID
+}
+
+// GetLastMatches ..
+func GetLastMatches(amount int) []CalculatedMatch {
+	var SQLObjects []repositories.SQLCalculatedMatch
+	err := repositories.DBEngine.Order("id DESC").Limit(amount).Find(&SQLObjects)
+
+	if err.Error != nil {
+		return nil
+	}
+	var returnData []CalculatedMatch
+
+	for _, SQLObject := range SQLObjects {
+		returnMatch := HydrateMatch(SQLObject)
+		returnData = append(returnData, returnMatch)
+	}
+
+	return returnData
 }
 
 /*

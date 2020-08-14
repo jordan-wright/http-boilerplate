@@ -28,7 +28,7 @@ func GetPlayerByName(name string) *Player {
 	}
 	tools.Check(err.Error)
 
-	return getPlayerFromSQLPlayer(*SQLPlayer)
+	return getPlayerFromSQLPlayer(*SQLPlayer, true)
 }
 
 // GetPlayerByID .
@@ -40,18 +40,20 @@ func GetPlayerByID(id int) *Player {
 	}
 	tools.Check(err.Error)
 
-	return getPlayerFromSQLPlayer(*SQLPlayer)
+	return getPlayerFromSQLPlayer(*SQLPlayer, true)
 }
 
-func getPlayerFromSQLPlayer(SQLPlayer repositories.SQLPlayer) *Player {
+func getPlayerFromSQLPlayer(SQLPlayer repositories.SQLPlayer, withMatches bool) *Player {
 	var playerSnapshots []PlayerSnapshot
 	err := repositories.DBEngine.Find(&playerSnapshots, "player_id = ?", SQLPlayer.ID)
 	tools.Check(err.Error)
 
 	var matches []*CalculatedMatch
-	for _, playerMatch := range playerSnapshots {
-		match := GetMatchByID(playerMatch.MatchID)
-		matches = append(matches, match)
+	if withMatches {
+		for _, playerMatch := range playerSnapshots {
+			match := GetMatchByID(playerMatch.MatchID)
+			matches = append(matches, match)
+		}
 	}
 
 	returnObject := Player{
@@ -117,4 +119,22 @@ func UpdatePlayer(PlayerID int64, win bool, goalsScored int64, goalsLost int64, 
 	err = repositories.DBEngine.Save(player)
 	tools.Check(err.Error)
 
+}
+
+// GetPlayersTable ..
+func GetPlayersTable() []Player {
+	var SQLObjects []repositories.SQLPlayer
+	err := repositories.DBEngine.Order("rating DESC").Find(&SQLObjects)
+
+	if err.Error != nil {
+		return nil
+	}
+	var returnData []Player
+
+	for _, SQLObject := range SQLObjects {
+		returnPlayer := getPlayerFromSQLPlayer(SQLObject, false)
+		returnData = append(returnData, *returnPlayer)
+	}
+
+	return returnData
 }
